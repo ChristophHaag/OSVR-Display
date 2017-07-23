@@ -35,7 +35,7 @@
 
 // Standard includes
 #include <vector>
-
+#include <iostream>
 
 #include <xcb/xcb.h>
 #include <xcb/randr.h>
@@ -109,43 +109,53 @@ std::vector<Display> getDisplays()
         {
             Display display;
 
-            /*
-            printf("CRTC[%i] INFO:\n", i);
-            printf("x-off\t: %i\n", outputReply[i]->x);
-            printf("y-off\t: %i\n", outputReply[i]->y);
-            printf("width\t: %i\n", outputReply[i]->width);
-            printf("height\t: %i\n\n", outputReply[i]->height);
-            */
-
             DisplayAdapter adapter;
             adapter.description = "TODO";
             display.adapter = std::move(adapter);
 
-            uint8_t * outputname = xcb_randr_get_output_info_name(outputReply[i]);
+            uint8_t* outputname = xcb_randr_get_output_info_name(outputReply[i]);
             int len = xcb_randr_get_output_info_name_length(outputReply[i]);
             std::string name = std::string((char*)outputname, len);
             display.name = name;
 
-            xcb_randr_crtc_t crtc = outputReply[i]->crtc;
+            xcb_randr_get_crtc_info_cookie_t ct = xcb_randr_get_crtc_info ( XConnection, outputReply[i]->crtc, XCB_CURRENT_TIME );
+            xcb_randr_get_crtc_info_reply_t *crtc_reply = xcb_randr_get_crtc_info_reply ( XConnection, ct, NULL );
+            if ( crtc_reply ) {
+                DisplaySize display_size;
+                display_size.height = crtc_reply->height;
+                display_size.width = crtc_reply->width;
+                display.size = display_size;
+
+                DisplayPosition display_position;
+                display_position.x = crtc_reply->x;
+                display_position.y = crtc_reply->y;
+                display.position = display_position;
+
+                uint16_t rotation = crtc_reply->rotation;
+                if (rotation == 1) {
+                    display.rotation = Rotation::Zero;
+                } else if (rotation == 4) {
+                    display.rotation == Rotation::Ninety;
+                } else if (rotation == 2) {
+                    display.rotation == Rotation::TwoSeventy;
+                } else if (rotation == 8) {
+                    display.rotation == Rotation::OneEighty;
+                }
+                //std::cout << rotation << std::endl;
+
+                display.attachedToDesktop = true;
+
+                //TODO
+                //display.verticalRefreshRate =
+                //display.edidVendorId =
+                //display.edidProductId =
+            }
 
             displays.emplace_back(std::move(display));
         }
     }
-
     xcb_disconnect(XConnection);
 
-    Display display;
-    /*
-    display.adapter = getDisplayAdapter(display_id);
-    display.name = getDisplayName(display_id);
-    display.size = getDisplaySize(display_id);
-    display.position = getDisplayPosition(display_id);
-    display.rotation = getDisplayRotation(display_id);
-    display.verticalRefreshRate = getDisplayRefreshRate(display_id);
-    display.attachedToDesktop = getDisplayAttachedToDesktop(display_id);
-    display.edidVendorId = getDisplayEDIDVendorID(display_id);
-    display.edidProductId = getDisplayEDIDProductID(display_id);
-    */
     return displays;
 }
 
