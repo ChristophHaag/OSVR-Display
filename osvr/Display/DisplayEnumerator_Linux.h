@@ -36,6 +36,7 @@
 // Standard includes
 #include <vector>
 #include <iostream>
+#include <cstring> // strlen
 
 #include <xcb/xcb.h>
 #include <xcb/randr.h>
@@ -124,11 +125,11 @@ std::vector<Display> getDisplays()
                 if (rotation == 1) {
                     display.rotation = Rotation::Zero;
                 } else if (rotation == 4) {
-                    display.rotation == Rotation::Ninety;
+                    display.rotation = Rotation::Ninety;
                 } else if (rotation == 2) {
-                    display.rotation == Rotation::TwoSeventy;
+                    display.rotation = Rotation::TwoSeventy;
                 } else if (rotation == 8) {
-                    display.rotation == Rotation::OneEighty;
+                    display.rotation = Rotation::OneEighty;
                 }
                 std::cout << rotation << std::endl;
 
@@ -136,9 +137,33 @@ std::vector<Display> getDisplays()
 
                 //TODO
                 //display.verticalRefreshRate =
+
+                //uint8_t *edid = xcb_randr_get_output_property_data (outputReply[i]);
                 //display.edidVendorId =
                 //display.edidProductId =
             }
+
+
+            xcb_generic_error_t *error;
+
+
+            xcb_intern_atom_cookie_t edid_cookie = xcb_intern_atom (XConnection, 1, strlen("EDID"), "EDID");
+            xcb_intern_atom_reply_t *edid_reply = xcb_intern_atom_reply (XConnection, edid_cookie, &error);
+            if (error != NULL || edid_reply == NULL) {
+                int ec = error ? error->error_code : -1;
+                fprintf (stderr, "Intern Atom returned error %d\n", ec);
+            }
+
+            xcb_randr_query_output_property_cookie_t prop_cookie = xcb_randr_query_output_property (XConnection, *firstOutput, edid_reply->atom);
+            xcb_randr_query_output_property_reply_t *prop_reply = xcb_randr_query_output_property_reply(XConnection, prop_cookie, &error);
+
+
+            int vallen = xcb_randr_query_output_property_valid_values_length (prop_reply);
+            int32_t *values = xcb_randr_query_output_property_valid_values (prop_reply);
+            std::cout << "vals" << std::endl;
+            for (int i = 0; i < vallen; i++)
+                std::cout << values[i] << std::endl;
+
 
             displays.emplace_back(std::move(display));
         }
