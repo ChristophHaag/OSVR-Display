@@ -47,45 +47,34 @@ std::vector<Display> getDisplays()
 {
     std::vector<Display> displays;
 
+    const char *display_str = getenv ( "DISPLAY" );
+    xcb_connection_t* XConnection = xcb_connect(display_str, 0);
 
-    //Open connection to X server
-    xcb_connection_t* XConnection = xcb_connect(0, 0);
-
-    //Get the first X screen
     xcb_screen_t* XFirstScreen = xcb_setup_roots_iterator(
                                xcb_get_setup(XConnection)).data;
-    //Generate ID for the X window
     xcb_window_t XWindowDummy = xcb_generate_id(XConnection);
 
-    //Create dummy X window
     xcb_create_window(XConnection, 0, XWindowDummy, XFirstScreen->root,
                       0, 0, 1, 1, 0, 0, 0, 0, 0);
 
-    //Flush pending requests to the X server
     xcb_flush(XConnection);
 
-    //Send a request for screen resources to the X server
     xcb_randr_get_screen_resources_cookie_t screenResCookie = {};
     screenResCookie = xcb_randr_get_screen_resources(XConnection,
                                                      XWindowDummy);
 
-    //Receive reply from X server
     xcb_randr_get_screen_resources_reply_t* screenResReply = {};
     screenResReply = xcb_randr_get_screen_resources_reply(XConnection,
                      screenResCookie, 0);
 
     int outputs_num = 0;
-    xcb_randr_crtc_t* firstCRTC;
+    xcb_randr_output_t* firstOutput;
 
-    //Get a pointer to the first CRTC and number of CRTCs
-    //It is crucial to notice that you are in fact getting
-    //an array with firstCRTC being the first element of
-    //this array and crtcs_length - length of this array
     if(screenResReply)
     {
         outputs_num = xcb_randr_get_screen_resources_outputs_length(screenResReply);
 
-        firstCRTC = xcb_randr_get_screen_resources_outputs(screenResReply);
+        firstOutput = xcb_randr_get_screen_resources_outputs(screenResReply);
     }
     else
         return {};
@@ -95,7 +84,7 @@ std::vector<Display> getDisplays()
                xcb_randr_get_output_info_cookie_t[outputs_num];
     for(int i = 0; i < outputs_num; i++)
         outputCookie[i] = xcb_randr_get_output_info(XConnection,
-                                            *(firstCRTC+i), 0);
+                                            *(firstOutput+i), 0);
     //Array of pointers to replies from X server
     xcb_randr_get_output_info_reply_t** outputReply = new
                xcb_randr_get_output_info_reply_t*[outputs_num];
@@ -141,7 +130,7 @@ std::vector<Display> getDisplays()
                 } else if (rotation == 8) {
                     display.rotation == Rotation::OneEighty;
                 }
-                //std::cout << rotation << std::endl;
+                std::cout << rotation << std::endl;
 
                 display.attachedToDesktop = true;
 
@@ -161,8 +150,20 @@ std::vector<Display> getDisplays()
 
 DesktopOrientation getDesktopOrientation(const Display& display)
 {
-	// TODO
-	return DesktopOrientation::Landscape;
+    const auto rotation = display.rotation;
+
+    if (Rotation::Zero == rotation) {
+        return (DesktopOrientation::Landscape);
+    } else if (Rotation::Ninety == rotation) {
+        return (DesktopOrientation::PortraitFlipped); //TODO: Maybe need to switch Portrait and PortraitFlipped
+    } else if (Rotation::OneEighty == rotation) {
+        return (DesktopOrientation::LandscapeFlipped);
+    } else if (Rotation::TwoSeventy == rotation) {
+        return (DesktopOrientation::Portrait);
+    } else {
+        std::cerr << "Invalid rotation value: " << static_cast<int>(rotation) << ".";
+        return DesktopOrientation::Landscape;
+    }
 }
 
 } // end namespace display
