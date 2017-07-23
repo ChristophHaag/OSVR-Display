@@ -18,6 +18,14 @@ if(APPLE)
 		${IOKIT_LIBRARY})
 endif()
 
+if(UNIX)
+
+    find_library(XCB xcb)
+    find_library(XCB_RANDR xcb-randr)
+    MESSAGE("XCB ${XCB}")
+    set(_osvrDisplay_deps ${XCB} ${XCB_RANDR})
+endif()
+
 # Source files for both dynamic and static library
 set(_osvrDisplay_src
 	Display.h
