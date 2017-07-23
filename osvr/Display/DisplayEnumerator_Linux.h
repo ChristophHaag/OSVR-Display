@@ -161,9 +161,8 @@ std::vector<Display> getDisplays()
             for (int i = 0; i < vallen; i++)
                 std::cout << values[i] << std::endl;
             */
-
-            //display.edidVendorId =
-            //display.edidProductId =
+            display.edidVendorId = 0;
+            display.edidProductId = 0;
 
 
             displays.emplace_back(std::move(display));
