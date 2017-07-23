@@ -122,7 +122,8 @@ std::vector<Display> getDisplays()
             display.adapter = std::move(adapter);
 
             uint8_t * outputname = xcb_randr_get_output_info_name(outputReply[i]);
-            std::string name = std::string((char*)outputname);
+            int len = xcb_randr_get_output_info_name_length(outputReply[i]);
+            std::string name = std::string((char*)outputname, len);
             display.name = name;
 
             xcb_randr_crtc_t crtc = outputReply[i]->crtc;
