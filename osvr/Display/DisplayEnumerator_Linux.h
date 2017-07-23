@@ -131,7 +131,7 @@ std::vector<Display> getDisplays()
                 } else if (rotation == 8) {
                     display.rotation = Rotation::OneEighty;
                 }
-                std::cout << rotation << std::endl;
+                //std::cout << rotation << std::endl;
 
                 display.attachedToDesktop = true;
 
