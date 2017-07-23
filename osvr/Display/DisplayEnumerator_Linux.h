@@ -135,18 +135,17 @@ std::vector<Display> getDisplays()
 
                 display.attachedToDesktop = true;
 
-                //TODO
-                //display.verticalRefreshRate =
+                //TODO: refresh rate from the monitor the dummy window is on??
+                xcb_randr_get_screen_info_reply_t *r =
+                xcb_randr_get_screen_info_reply (XConnection,
+                                                 xcb_randr_get_screen_info (XConnection, XWindowDummy), NULL);
+                display.verticalRefreshRate = r->rate;
 
-                //uint8_t *edid = xcb_randr_get_output_property_data (outputReply[i]);
-                //display.edidVendorId =
-                //display.edidProductId =
             }
 
 
+            /* // TODO: edid values
             xcb_generic_error_t *error;
-
-
             xcb_intern_atom_cookie_t edid_cookie = xcb_intern_atom (XConnection, 1, strlen("EDID"), "EDID");
             xcb_intern_atom_reply_t *edid_reply = xcb_intern_atom_reply (XConnection, edid_cookie, &error);
             if (error != NULL || edid_reply == NULL) {
@@ -156,13 +155,15 @@ std::vector<Display> getDisplays()
 
             xcb_randr_query_output_property_cookie_t prop_cookie = xcb_randr_query_output_property (XConnection, *firstOutput, edid_reply->atom);
             xcb_randr_query_output_property_reply_t *prop_reply = xcb_randr_query_output_property_reply(XConnection, prop_cookie, &error);
-
-
             int vallen = xcb_randr_query_output_property_valid_values_length (prop_reply);
             int32_t *values = xcb_randr_query_output_property_valid_values (prop_reply);
             std::cout << "vals" << std::endl;
             for (int i = 0; i < vallen; i++)
                 std::cout << values[i] << std::endl;
+            */
+
+            //display.edidVendorId =
+            //display.edidProductId =
 
 
             displays.emplace_back(std::move(display));
